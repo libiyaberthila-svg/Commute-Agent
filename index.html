@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autonomous Commute AI & Seat Booking Agent</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand" href="#">
+        <i class="bi bi-robot fs-4 text-primary"></i>
+        <span>Autonomous Commute AI</span>
+        <span class="badge-live-tag ms-2"><i class="bi bi-cpu me-1"></i>Agentic 2.1</span>
+      </a>
+      
+      <div class="d-flex align-items-center gap-3 ms-auto">
+        <!-- Demo Wallet Balance Pill -->
+        <div class="wallet-badge" id="walletPill" data-bs-toggle="modal" data-bs-target="#walletModal" title="Click to manage simulated demo wallet">
+          <i class="bi bi-wallet2 fs-6"></i>
+          <span>₹<span id="navWalletBalance">5,000.00</span></span>
+          <span class="badge bg-dark border border-success text-success" style="font-size: 0.65rem;">DEMO</span>
+        </div>
+
+        <!-- User Profile Chip -->
+        <div class="badge bg-dark border border-secondary px-3 py-2 d-flex align-items-center gap-2" id="userProfileChip" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#loginModal">
+          <i class="bi bi-person-circle text-info"></i>
+          <span id="navUsername">Demo Commuter</span>
+        </div>
+
+        <!-- Theme Toggle Switch -->
+        <button class="btn btn-sm btn-outline-secondary px-2" id="themeToggleBtn" title="Toggle Dark/Light theme">
+          <i class="bi bi-moon-stars fs-6" id="themeIcon"></i>
+        </button>
+
+        <span class="badge bg-secondary d-none d-md-inline" id="backendStatusBadge"><i class="bi bi-circle-fill text-warning me-1"></i>Connecting...</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="container-fluid px-4 py-3">
+    
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-pills mb-4" id="mainTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="planner-tab" data-bs-toggle="pill" data-bs-target="#planner" type="button" role="tab">
+          <i class="bi bi-map me-1"></i> Commute Planner & Agent Hub
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="booking-tab" data-bs-toggle="pill" data-bs-target="#booking" type="button" role="tab">
+          <i class="bi bi-ticket-perforated me-1"></i> Autonomous Seat Booking
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tracking-tab" data-bs-toggle="pill" data-bs-target="#tracking" type="button" role="tab">
+          <i class="bi bi-geo-alt-fill me-1 text-danger"></i> Live Map & GPS Tracking
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="replan-tab" data-bs-toggle="pill" data-bs-target="#replan" type="button" role="tab">
+          <i class="bi bi-arrow-repeat me-1"></i> Disruption & Re-Planning
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="rag-tab" data-bs-toggle="pill" data-bs-target="#rag" type="button" role="tab">
+          <i class="bi bi-journal-text me-1"></i> RAG Knowledge Base
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="traces-tab" data-bs-toggle="pill" data-bs-target="#traces" type="button" role="tab">
+          <i class="bi bi-terminal me-1"></i> Agent Workflow Traces
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="prefs-tab" data-bs-toggle="pill" data-bs-target="#prefs" type="button" role="tab">
+          <i class="bi bi-sliders me-1"></i> Preferences & Memory
+        </button>
+      </li>
+    </ul>
+
+    <!-- Tab Contents -->
+    <div class="tab-content" id="mainTabContent">
+      
+      <!-- ========================================== -->
+      <!-- TAB 1: COMMUTE PLANNER -->
+      <!-- ========================================== -->
+      <div class="tab-pane fade show active" id="planner" role="tabpanel">
+        <div class="row g-4">
+          <!-- Request Form -->
+          <div class="col-lg-4">
+            <div class="card h-100">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-signpost-2 me-2 text-primary"></i>Commute Parameters</span>
+                <span class="badge bg-primary">Autonomous Agent</span>
+              </div>
+              <div class="card-body">
+                <form id="commuteForm">
+                  <div class="mb-3">
+                    <label class="form-label">Origin Location</label>
+                    <input type="text" class="form-control" id="originInput" value="North Station" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Destination Location</label>
+                    <input type="text" class="form-control" id="destinationInput" value="Financial District" required>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-6">
+                      <label class="form-label">Journey Date</label>
+                      <input type="date" class="form-control" id="journeyDateInput" required>
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label">Latest Arrival (HH:MM)</label>
+                      <input type="time" class="form-control" id="targetArrivalInput" value="09:00" required>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-6">
+                      <label class="form-label">Budget Limit (₹)</label>
+                      <input type="number" step="50" class="form-control" id="budgetInput" value="2000" required>
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label">Ranking Strategy</label>
+                      <select class="form-select" id="strategyInput">
+                        <option value="balanced" selected>Balanced</option>
+                        <option value="cheapest">Cheapest</option>
+                        <option value="fastest">Fastest</option>
+                        <option value="preference">Preference-based</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-6">
+                      <label class="form-label">Passenger Name</label>
+                      <input type="text" class="form-control" id="passengerNameInput" value="Demo Commuter">
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label">Seat Preference</label>
+                      <select class="form-select" id="seatPrefInput">
+                        <option value="window" selected>Window Seat</option>
+                        <option value="aisle">Aisle Seat</option>
+                        <option value="quiet">Quiet Car</option>
+                        <option value="front">Front Seat</option>
+                        <option value="extra_legroom">Extra Legroom</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Payment Mode Choice -->
+                  <div class="mb-3">
+                    <label class="form-label">Preferred Payment Mode</label>
+                    <select class="form-select" id="paymentModeInput">
+                      <option value="ONLINE_WALLET" selected>Online — Demo Wallet (Instant ₹ Debit)</option>
+                      <option value="OFFLINE_PAY_LATER">Offline — Pay Later (Pay at Counter)</option>
+                    </select>
+                  </div>
+                  
+                  <div class="p-3 mb-3 rounded bg-dark border border-secondary">
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="autoBookToggle" checked>
+                      <label class="form-check-label fw-bold" for="autoBookToggle">Opt-in to Autonomous Seat Booking</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="authConsentToggle" checked>
+                      <label class="form-check-label small text-muted" for="authConsentToggle">
+                        I authorize the agent to book seats & process payments if eligible without manual signoff.
+                      </label>
+                    </div>
+                  </div>
+
+                  <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" id="planBtn">
+                    <i class="bi bi-play-circle me-2"></i>Run Autonomous Agent Plan
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Decision & Route Results -->
+          <div class="col-lg-8">
+            <div class="card h-100">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-lightning-charge me-2 text-warning"></i>Agent Recommendation & Ranked Routes</span>
+                <span id="activeSessionBadge" class="badge bg-dark border border-secondary text-muted">No Session</span>
+              </div>
+              <div class="card-body">
+                <!-- Explanation Alert -->
+                <div id="explanationBox" class="alert alert-info d-none">
+                  <div class="d-flex align-items-start">
+                    <i class="bi bi-info-circle-fill fs-5 me-2 mt-1"></i>
+                    <div>
+                      <h6 class="alert-heading mb-1 fw-bold">Agent Decision Explanation</h6>
+                      <p id="explanationText" class="mb-0 small"></p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Auto-Booking Alert Box (if triggered) -->
+                <div id="bookingResultAlert" class="alert alert-success d-none">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                      <strong>Autonomous Seat Reservation & Payment Completed!</strong>
+                      <div class="small mt-1" id="bookingResultDetails"></div>
+                    </div>
+                    <div class="d-flex gap-2">
+                      <button class="btn btn-sm btn-outline-light" id="viewReceiptBtn"><i class="bi bi-receipt me-1"></i>Receipt</button>
+                      <button class="btn btn-sm btn-light fw-bold" onclick="switchToLiveTracking()"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Live Map</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Disruption Alert (if any) -->
+                <div id="disruptionBanner" class="alert alert-warning d-none">
+                  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                  <span id="disruptionText"></span>
+                </div>
+
+                <!-- Commute Options List -->
+                <h6 class="text-muted text-uppercase small fw-bold mb-3">Discovered & Ranked Routes</h6>
+                <div id="optionsContainer" class="row g-3">
+                  <div class="col-12 text-center py-5 text-muted">
+                    <i class="bi bi-compass fs-1 d-block mb-2 text-primary"></i>
+                    Click "Run Autonomous Agent Plan" to start route discovery, constraint evaluation, and RAG retrieval.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- TAB 2: AUTONOMOUS SEAT BOOKING -->
+      <!-- ========================================== -->
+      <div class="tab-pane fade" id="booking" role="tabpanel">
+        <div class="row g-4">
+          <!-- Seat Layout & Picker -->
+          <div class="col-lg-6">
+            <div class="card h-100">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-grid-3x3-gap me-2 text-primary"></i>Live Seat Layout & Reservation</span>
+                <span class="badge bg-info">Express Rail Line 9</span>
+              </div>
+              <div class="card-body">
+                <div class="text-center mb-4">
+                  <div class="d-flex justify-content-center gap-3 mb-3 small">
+                    <span><span class="badge bg-primary">&nbsp;</span> Available</span>
+                    <span><span class="badge bg-secondary text-decoration-line-through">&nbsp;</span> Booked</span>
+                    <span><span class="badge bg-success">&nbsp;</span> Selected</span>
+                    <span><span class="badge" style="background:#8b5cf6">&nbsp;</span> Quiet Car</span>
+                  </div>
+                  <h6 class="text-muted small text-uppercase">Train Coach 1 & 2 Floorplan</h6>
+                </div>
+
+                <!-- Interactive Seat Grid -->
+                <div id="seatGrid" class="seat-grid mb-4">
+                  <!-- Populated by JS -->
+                </div>
+
+                <!-- Booking Action Card -->
+                <div class="p-3 rounded bg-dark border border-secondary">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">Selected Seat:</span>
+                    <span class="fw-bold fs-5 text-success" id="selectedSeatBadge">None (Auto-allocate)</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">Payment Mode:</span>
+                    <select class="form-select form-select-sm w-50" id="manualBookingPaymentMode">
+                      <option value="ONLINE_WALLET" selected>Online — Demo Wallet</option>
+                      <option value="OFFLINE_PAY_LATER">Offline — Pay Later</option>
+                    </select>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">Calculated Total Fare:</span>
+                    <span class="fw-bold fs-5 text-primary" id="bookingFareText">₹180.00</span>
+                  </div>
+                  <button class="btn btn-success w-100 py-2 fw-bold" id="manualBookBtn">
+                    <i class="bi bi-lock me-1"></i>Execute Confirmed Seat Reservation
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Booking Verification & History -->
+          <div class="col-lg-6">
+            <div class="card h-100">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-shield-check me-2 text-success"></i>Booking Verification & Persistence</span>
+                <button class="btn btn-sm btn-outline-secondary" id="refreshBookingsBtn"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+              </div>
+              <div class="card-body">
+                <!-- Verify Booking Tool Form -->
+                <div class="input-group mb-3">
+                  <input type="text" class="form-control" id="verifyBookingIdInput" placeholder="Enter Booking ID (e.g. MOCK-BKG-...)">
+                  <button class="btn btn-outline-primary" id="verifyBtn">Verify with Provider</button>
+                </div>
+                <div id="verifyResultBox" class="small mb-3"></div>
+
+                <h6 class="text-muted text-uppercase small fw-bold mb-2">Confirmed Booking Records (SQLite)</h6>
+                <div class="table-responsive">
+                  <table class="table table-dark table-sm table-hover">
+                    <thead>
+                      <tr>
+                        <th>Booking ID</th>
+                        <th>Passenger</th>
+                        <th>Seat</th>
+                        <th>Fare</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="bookingsTableBody">
+                      <tr><td colspan="6" class="text-center text-muted">No bookings recorded yet.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- TAB 3: LIVE MAP & GPS TRACKING -->
+      <!-- ========================================== -->
+      <div class="tab-pane fade" id="tracking" role="tabpanel">
+        <div class="row g-4">
+          <!-- Interactive Map Card -->
+          <div class="col-lg-8">
+            <div class="card position-relative">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span>
+                  <i class="bi bi-compass text-primary me-2"></i>
+                  <strong>Interactive Transit Radar & GPS Navigation</strong>
+                </span>
+                <div class="d-flex align-items-center gap-2">
+                  <button class="btn btn-sm btn-outline-info py-0 px-2" data-bs-toggle="modal" data-bs-target="#mapConfigModal" title="Configure Google Maps API Key & Tile Providers">
+                    <i class="bi bi-gear-fill me-1"></i>Map API & Layers
+                  </button>
+                  <span class="badge bg-success" id="trackingStatusBadge"><i class="bi bi-broadcast me-1"></i>LIVE TELEMETRY</span>
+                </div>
+              </div>
+              <div class="card-body p-2 position-relative">
+                
+                <!-- Interactive Leaflet Map Container -->
+                <div id="liveMap"></div>
+
+                <!-- HUD Floating Overlay -->
+                <div class="map-hud-overlay">
+                  <div class="hud-stat-box">
+                    <div>
+                      <div class="text-muted small" style="font-size: 0.7rem;">TELEMETRY SPEED</div>
+                      <div class="hud-speed-gauge"><span id="hudSpeed">54.2</span> <span style="font-size:0.9rem;">KM/H</span></div>
+                    </div>
+                    <div class="border-start border-secondary ps-3">
+                      <div class="text-muted small" style="font-size: 0.7rem;">ETA COUNTDOWN</div>
+                      <div class="fw-bold text-success fs-5"><span id="hudEta">18</span> MIN</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              <div class="card-footer bg-transparent border-top border-secondary p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="text-muted small">Corridor Travel Progress (<span id="trackingProgressText">35%</span>)</span>
+                  <span class="small text-info font-monospace" id="trackingCoords">12.9716° N, 77.5946° E</span>
+                </div>
+                <div class="route-progress-bar mb-3">
+                  <div class="route-progress-fill" id="trackingProgressFill" style="width: 35%;"></div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 justify-content-between">
+                  <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-primary" id="autoPlaySimBtn">
+                      <i class="bi bi-play-fill me-1"></i>Start Auto-Pilot Simulation
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning" id="pauseSimBtn">
+                      <i class="bi bi-pause-fill me-1"></i>Pause
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" id="resetSimBtn">
+                      <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                    </button>
+                  </div>
+                  <button class="btn btn-sm btn-outline-info" id="advanceTrackingBtn">
+                    <i class="bi bi-skip-forward-fill me-1"></i>Step Forward (+15%)
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Trip HUD Cards & Station Waypoints -->
+          <div class="col-lg-4">
+            <div class="card h-100">
+              <div class="card-header">
+                <i class="bi bi-signpost-split me-2 text-primary"></i>Transit Waypoints & Telemetry
+              </div>
+              <div class="card-body">
+                <div class="row g-2 text-center mb-4">
+                  <div class="col-6">
+                    <div class="p-3 bg-dark rounded border border-secondary">
+                      <div class="text-muted small">Current Stop</div>
+                      <div class="fw-bold text-light fs-6" id="trackingCurrentStop">North Station</div>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="p-3 bg-dark rounded border border-secondary">
+                      <div class="text-muted small">Next Stop</div>
+                      <div class="fw-bold text-warning fs-6" id="trackingNextStop">Tech Park Junction</div>
+                    </div>
+                  </div>
+                </div>
+
+                <h6 class="text-muted text-uppercase small fw-bold mb-3">Corridor Stops Sequence</h6>
+                <ul class="list-group list-group-flush bg-transparent" id="trackingStopsList">
+                  <li class="list-group-item bg-transparent text-light"><i class="bi bi-check-circle-fill text-success me-2"></i>North Station (Departed 08:25)</li>
+                  <li class="list-group-item bg-transparent text-light"><i class="bi bi-arrow-right-circle text-warning me-2"></i>Tech Park Interchange</li>
+                  <li class="list-group-item bg-transparent text-light"><i class="bi bi-circle text-muted me-2"></i>Metro Central Terminal</li>
+                  <li class="list-group-item bg-transparent text-light"><i class="bi bi-flag-fill text-info me-2"></i>Financial District (ETA 09:00)</li>
+                </ul>
+
+                <div class="p-3 rounded bg-dark border border-secondary mt-4">
+                  <div class="d-flex justify-content-between align-items-center small mb-1">
+                    <span class="text-muted"><i class="bi bi-tree text-success me-1"></i>Eco Carbon Saved:</span>
+                    <span class="fw-bold text-success">~1.82 kg CO₂</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center small">
+                    <span class="text-muted"><i class="bi bi-shield-check text-info me-1"></i>Provider Track Signal:</span>
+                    <span class="badge bg-success">Optimal</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- TAB 4: DISRUPTIONS & RE-PLANNING -->
+      <!-- ========================================== -->
+      <div class="tab-pane fade" id="replan" role="tabpanel">
+        <div class="row g-4">
+          <div class="col-lg-5">
+            <div class="card">
+              <div class="card-header">
+                <i class="bi bi-exclamation-octagon me-2 text-danger"></i>Simulate Live Transit Disruption
+              </div>
+              <div class="card-body">
+                <p class="small text-muted">
+                  Test the agent's real-time autonomous <code>REPLAN</code> capabilities by triggering simulated disruptions:
+                </p>
+                
+                <div class="mb-3">
+                  <label class="form-label">Disruption Type</label>
+                  <select class="form-select" id="disruptionTypeSelect">
+                    <option value="signal_failure">Rail Signal Failure (+35 min delay)</option>
+                    <option value="traffic_accident">Major Highway Collision (+45 min delay)</option>
+                    <option value="weather_storm">Severe Rain & Flooding (+30 min bus delay)</option>
+                    <option value="train_cancellation">Express Train Cancellation</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Affected Transit Mode</label>
+                  <select class="form-select" id="affectedModeSelect">
+                    <option value="express_train" selected>Express Train</option>
+                    <option value="bus">City Bus</option>
+                    <option value="rideshare">Rideshare</option>
+                    <option value="metro">Metro Subway</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Incurred Delay (Minutes)</label>
+                  <input type="number" class="form-control" id="delayMinutesInput" value="35">
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Location / Incident Description</label>
+                  <input type="text" class="form-control" id="disruptionDescInput" value="Overhead wire failure at North Central junction.">
+                </div>
+
+                <div class="form-check mb-3">
+                  <input class="form-check-input" type="checkbox" id="replanAutoRebook" checked>
+                  <label class="form-check-label small" for="replanAutoRebook">
+                    Allow autonomous re-booking on backup transit if eligible
+                  </label>
+                </div>
+
+                <button class="btn btn-danger w-100 py-2 fw-bold" id="triggerDisruptionBtn">
+                  <i class="bi bi-radioactive me-2"></i>Broadcast Disruption & Trigger REPLAN Loop
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-7">
+            <div class="card">
+              <div class="card-header">
+                <i class="bi bi-clock-history me-2 text-info"></i>Re-planning Results & Alternative Selection
+              </div>
+              <div class="card-body">
+                <div id="replanResultsBox">
+                  <div class="text-center py-5 text-muted">
+                    <i class="bi bi-arrow-repeat fs-1 d-block mb-2 text-info"></i>
+                    Run an initial commute plan, then trigger a disruption to observe stateful re-planning.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- TAB 5: RAG KNOWLEDGE BASE -->
+      <!-- ========================================== -->
+      <div class="tab-pane fade" id="rag" role="tabpanel">
+        <div class="row g-4">
+          <div class="col-lg-5">
+            <div class="card">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-folder2-open me-2 text-primary"></i>Commute Documents (PDF/TXT/MD)</span>
+                <span class="badge bg-secondary">Persistent Vector Index</span>
+              </div>
+              <div class="card-body">
+                <!-- Upload form -->
+                <form id="ragUploadForm" class="mb-4">
+                  <label class="form-label">Upload Policy or Guidelines (.txt, .md, .pdf)</label>
+                  <div class="input-group">
+                    <input type="file" class="form-control" id="ragFileInput" accept=".txt,.md,.pdf" required>
+                    <button class="btn btn-primary" type="submit"><i class="bi bi-upload"></i> Ingest</button>
+                  </div>
+                </form>
+
+                <h6 class="text-muted text-uppercase small fw-bold mb-2">Indexed Knowledge Base Documents</h6>
+                <ul class="list-group list-group-flush bg-transparent" id="ragDocList">
+                  <li class="list-group-item bg-transparent text-muted">Loading documents...</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-7">
+            <div class="card">
+              <div class="card-header">
+                <i class="bi bi-search me-2 text-warning"></i>Semantic Grounded Query Tester
+              </div>
+              <div class="card-body">
+                <div class="input-group mb-3">
+                  <input type="text" class="form-control" id="ragQueryInput" value="What is the refund policy for train delays exceeding 15 minutes?">
+                  <button class="btn btn-warning fw-bold" id="ragQueryBtn"><i class="bi bi-search me-1"></i>Query RAG</button>
+                </div>
+
+                <div id="ragQueryResultContainer" class="p-3 rounded bg-dark border border-secondary">
+                  <span class="text-muted small">Query responses and grounded citations will appear here.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- TAB 6: AGENT TRACES -->
+      <!-- ========================================== -->
+      <div class="tab-pane fade" id="traces" role="tabpanel">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-code-square me-2 text-info"></i>Agent Workflow Execution Traces</span>
+            <span class="badge bg-dark border border-secondary" id="traceCountBadge">0 Steps</span>
+          </div>
+          <div class="card-body">
+            <div class="trace-timeline" id="traceTimelineContainer">
+              <div class="text-muted py-4">No active workflow trace yet. Run a plan to view live execution logs.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- TAB 7: PREFERENCES & MEMORY -->
+      <!-- ========================================== -->
+      <div class="tab-pane fade" id="prefs" role="tabpanel">
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-header">
+                <i class="bi bi-person-gear me-2 text-primary"></i>Stored User Commute Preferences (SQLite)
+              </div>
+              <div class="card-body">
+                <form id="prefsForm">
+                  <div class="mb-3">
+                    <label class="form-label">Default Max Budget (₹)</label>
+                    <input type="number" step="50" class="form-control" id="prefMaxBudget" value="2000">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Default Latest Arrival Time</label>
+                    <input type="time" class="form-control" id="prefArrivalTime" value="09:00">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Default Seat Preference</label>
+                    <select class="form-select" id="prefSeat">
+                      <option value="window">Window</option>
+                      <option value="aisle">Aisle</option>
+                      <option value="quiet">Quiet Car</option>
+                      <option value="front">Front</option>
+                      <option value="extra_legroom">Extra Legroom</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Default Ranking Strategy</label>
+                    <select class="form-select" id="prefStrategy">
+                      <option value="balanced">Balanced</option>
+                      <option value="cheapest">Cheapest</option>
+                      <option value="fastest">Fastest</option>
+                      <option value="preference">Preference-based</option>
+                    </select>
+                  </div>
+                  <button type="submit" class="btn btn-primary fw-bold"><i class="bi bi-save me-1"></i>Save Preferences</button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-header">
+                <i class="bi bi-tools me-2 text-warning"></i>Registered Agent Tools Catalog
+              </div>
+              <div class="card-body">
+                <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+                  <table class="table table-dark table-sm">
+                    <thead>
+                      <tr>
+                        <th>Tool Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody id="toolsCatalogBody">
+                      <!-- Populated via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: DEMO WALLET & TRANSACTIONS -->
+  <!-- ========================================== -->
+  <div class="modal fade" id="walletModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content bg-dark border border-secondary text-light">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title"><i class="bi bi-wallet2 text-success me-2"></i>Simulated Demo Wallet</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <div class="p-3 rounded bg-black border border-success">
+                <span class="text-muted small text-uppercase">Available Demo Balance</span>
+                <h3 class="text-success mb-1">₹<span id="modalWalletBalance">5,000.00</span></h3>
+                <span class="badge bg-secondary" style="font-size:0.7rem;">SIMULATED DEMO FUNDS ONLY</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 rounded bg-black border border-secondary">
+                <span class="text-muted small text-uppercase mb-2 d-block">Quick Top-Up (Demo Funds)</span>
+                <div class="d-flex gap-2 mb-2">
+                  <button class="btn btn-sm btn-outline-success" onclick="quickTopup(500)">+ ₹500</button>
+                  <button class="btn btn-sm btn-outline-success" onclick="quickTopup(1000)">+ ₹1,000</button>
+                  <button class="btn btn-sm btn-outline-success" onclick="quickTopup(2000)">+ ₹2,000</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h6 class="text-muted text-uppercase small fw-bold mb-2">Wallet Transaction Ledger (SQLite)</h6>
+          <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+            <table class="table table-dark table-sm">
+              <thead>
+                <tr>
+                  <th>Txn ID</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Balance After</th>
+                  <th>Description</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody id="walletTxnTableBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: LOGIN / USER PROFILE -->
+  <!-- ========================================== -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark border border-secondary text-light">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title"><i class="bi bi-person-lock text-info me-2"></i>Demo Account Authentication</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="loginForm">
+            <div class="mb-3">
+              <label class="form-label">Username</label>
+              <input type="text" class="form-control" id="loginUsername" value="demo_commuter" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Password</label>
+              <input type="password" class="form-control" id="loginPassword" value="demo123" required>
+            </div>
+            <div class="alert alert-info py-2 small mb-3">
+              <i class="bi bi-info-circle me-1"></i>Pre-loaded credentials: <code>demo_commuter</code> / <code>demo123</code>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="bi bi-box-arrow-in-right me-1"></i>Sign In to Demo Account</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: BOOKING RECEIPT -->
+  <!-- ========================================== -->
+  <div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark border border-secondary text-light">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title"><i class="bi bi-receipt text-success me-2"></i>Official Commute Receipt</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="receipt-card" id="receiptCardContent">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: GOOGLE MAPS API & TILE CONFIGURATION -->
+  <!-- ========================================== -->
+  <div class="modal fade" id="mapConfigModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark border border-secondary text-light">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title"><i class="bi bi-geo-alt-fill text-info me-2"></i>Map Provider & API Key Settings</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="mapConfigForm">
+            <div class="mb-3">
+              <label class="form-label">Map Tile Layer Provider</label>
+              <select class="form-select" id="mapProviderSelect">
+                <option value="cartodb_dark" selected>CartoDB Dark Matter (High-Contrast Dark)</option>
+                <option value="osm_standard">OpenStreetMap Standard (Light Mode)</option>
+                <option value="google_roadmap">Google Maps — Roadmap Tiles</option>
+                <option value="google_hybrid">Google Maps — Satellite & Hybrid</option>
+                <option value="google_terrain">Google Maps — Terrain / Elevation</option>
+              </select>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label d-flex justify-content-between">
+                <span>Google Maps / Custom API Key</span>
+                <span class="text-muted fw-normal small">(Optional)</span>
+              </label>
+              <div class="input-group">
+                <input type="password" class="form-control" id="mapApiKeyInput" placeholder="AIzaSy... (Leave empty for default free tiles)">
+                <button class="btn btn-outline-secondary" type="button" id="toggleMapKeyVisibilityBtn">
+                  <i class="bi bi-eye" id="toggleMapKeyIcon"></i>
+                </button>
+              </div>
+              <div class="form-text text-muted small mt-1">
+                <i class="bi bi-shield-check text-success me-1"></i>Stored securely in local browser storage only. No paid subscription required.
+              </div>
+            </div>
+
+            <div class="alert alert-info py-2 small mb-3">
+              <i class="bi bi-info-circle me-1"></i>
+              Default tile providers (CartoDB & OpenStreetMap) operate 100% free with zero API key requirement.
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-primary flex-grow-1 fw-bold" id="saveMapConfigBtn">
+                <i class="bi bi-check-circle me-1"></i>Apply Map Settings
+              </button>
+              <button type="button" class="btn btn-outline-secondary" id="resetMapConfigBtn">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Default
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
