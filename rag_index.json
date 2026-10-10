@@ -1,0 +1,42 @@
+[
+  {
+    "id": "commute_transit_policy_0_83c035",
+    "text": "METRO AND RAIL TRANSIT COMMUTE GUIDELINES 2026\n1. Peak Hours & Fares: Peak hours are 07:00-09:30 and 16:30-19:00 on weekdays.\n   Express Rail fares include reserved seating in Cars 1 and 2.\n2. Automatic Booking & Seat Preferences: Auto-booking is authorized for transactions under $50.00.\n   Window seats and quiet car seats are subject to availability. Quiet cars strictly forbid phone calls.\n3. Delay Compensation & Re-planning: If a train is delayed by more than 15 minutes, riders are entitled to\n   a full fare refund or free transfer to parallel metro lines.\n4. Luggage & Bike Rules: Foldable bikes and small luggage are permitted during peak hours.\n5. Weather Disruption Policy: In heavy snow or severe rainstorms, bus speeds are reduced by 30%.\n   Underground Metro Blue Line remains 100% operational during surface weather disruptions.",
+    "metadata": {
+      "source": "commute_transit_policy.txt",
+      "chunk_index": 0,
+      "file_path": "C:\\Users\\NPRICC\\.gemini\\antigravity\\scratch\\daily-commute-decision-agent\\knowledge_base\\commute_transit_policy.txt",
+      "timestamp": "2026-10-09T15:14:37.544915"
+    }
+  },
+  {
+    "id": "monthly_pass_discounts_0_c6138d",
+    "text": "# Commuter Pass and Discount Guide",
+    "metadata": {
+      "source": "monthly_pass_discounts.md",
+      "chunk_index": 0,
+      "file_path": "C:\\Users\\NPRICC\\.gemini\\antigravity\\scratch\\daily-commute-decision-agent\\knowledge_base\\monthly_pass_discounts.md",
+      "timestamp": "2026-10-09T15:15:33.740068"
+    }
+  },
+  {
+    "id": "monthly_pass_discounts_1_4fbd2c",
+    "text": "- **Monthly Transit Pass**: Provides unlimited rides on Metro Blue Line and City Buses for $95/month.\n- **Corporate Tax Benefits**: Pre-tax commuter benefits can reduce monthly travel expenses by up to 25%.\n- **Rideshare Surge Policy**: When rain precipitation exceeds 70%, rideshare pricing increases by 1.3x to 1.8x.\n- **Seat Reservation Window**: Express Rail bookings open 7 days prior and close 10 minutes before departure.",
+    "metadata": {
+      "source": "monthly_pass_discounts.md",
+      "chunk_index": 1,
+      "file_path": "C:\\Users\\NPRICC\\.gemini\\antigravity\\scratch\\daily-commute-decision-agent\\knowledge_base\\monthly_pass_discounts.md",
+      "timestamp": "2026-10-09T15:15:33.740095"
+    }
+  },
+  {
+    "id": "office_commute_rules_0_9b38b4",
+    "text": "SPECIAL SUBWAY SHUTTLE INFO:\nShuttle 88 runs exclusively between Tech Park and Central Station every 10 minutes.\nBicycles are free of charge on this specific shuttle.",
+    "metadata": {
+      "source": "office_commute_rules.txt",
+      "chunk_index": 0,
+      "file_path": "C:\\Users\\NPRICC\\AppData\\Local\\Temp\\pytest-of-NPRICC\\pytest-7\\test_rag_ingest_and_query_cust0\\office_commute_rules.txt",
+      "timestamp": "2026-10-10T12:12:32.203050"
+    }
+  }
+]
